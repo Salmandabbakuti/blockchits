@@ -1,21 +1,14 @@
 pragma solidity ^0.6.10;
 
 contract microchits {
-    
-    //address public owner;
-    
-    /*
-    constructor() public {
-        owner = msg.sender;
-    }
-    */
-    
-  struct chitsData {
+  
+    struct chitsData {
       string poolName;
       uint poolId;
       uint availableSlots;
       address[] members;
       address[] memberRequests;
+      address[] poolEndRequests;
       uint startedOn;
       uint endingOn;
       uint poolAmount;
@@ -39,6 +32,8 @@ contract microchits {
       address addr;
       bool isJoined;
       bool isRequested;
+      uint[] payments;
+      uint totalPaid;
   }
   mapping(uint => chitsData) public chitsPool;
   mapping(address=>mapping(uint=>poolMemberData))private poolMembers;
@@ -83,7 +78,6 @@ contract microchits {
       chitsPool[_poolId].memberRequests.push(msg.sender);
       poolMembers[msg.sender][_poolId].isRequested = true;
       
-         
      }
      
      function approveJoin(uint _poolId, address _member) public payable {
@@ -97,6 +91,42 @@ contract microchits {
       require(!chitsPool[_poolId].isEnded, 'This Pool is Ended');
    
       chitsPool[_poolId].members.push(_member);
-         
+      poolMembers[_member][_poolId].isJoined = true;
+      poolMembers[_member][_poolId].addr = _member;
+      chitsPool[_poolId].availableSlots--;
      }
+     
+     function payAmount(uint _poolId) public payable {
+
+      require(poolMembers[msg.sender][_poolId].isJoined,'You are not joined in this pool');
+      require(chitsPool[_poolId].isExists, 'Pool with this Id doesnot exist');
+      require(!chitsPool[_poolId].isEnded, 'This Pool is Ended');
+      require(chitsPool[_poolId].aph == msg.value,'Amount must be equal to pool amount per head');
+      require(poolMembers[msg.sender][_poolId].totalPaid < chitsPool[_poolId].poolAmount,'You have already paid all installments.');
+      
+      poolMembers[msg.sender][_poolId].payments.push(now);
+   
+      
+     }
+     
+     function endPool(uint _poolId) public payable {
+         
+      require(chitsPool[_poolId].owner == msg.sender, 'Only owner can end pool');
+      require(!chitsPool[_poolId].isEnded, 'This Pool is already Ended');
+      require(chitsPool[_poolId].poolEndRequests.length == chitsPool[_poolId].poolSize, 'All Pool members request are needed to end pool.');
+     
+      
+      poolMembers[msg.sender][_poolId].payments.push(now);
+      chitsPool[_poolId].isEnded = true;
+     }
+    
+     function submitPoolEndRequest(uint _poolId) public payable {
+         
+      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can submit end request');
+      require(chitsPool[_poolId].isExists, 'Pool with this Id doesnot exist');
+      require(!chitsPool[_poolId].isEnded, 'This Pool is already Ended');
+      
+      chitsPool[_poolId].poolEndRequests.push(msg.sender);
+     }
+    
 }
