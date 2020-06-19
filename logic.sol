@@ -18,6 +18,7 @@ contract microchits {
       bool isExists;
       bool isEnded;
       uint amountAvailable;
+      address winnerOfMonth;
       uint aph; //amount per head
   }
   struct memberData {
@@ -32,6 +33,7 @@ contract microchits {
       address addr;
       bool isJoined;
       bool isRequested;
+      bool isDrawn;
       uint[] payments;
       uint totalPaid;
   }
@@ -127,6 +129,20 @@ contract microchits {
       require(!chitsPool[_poolId].isEnded, 'This Pool is already Ended');
       
       chitsPool[_poolId].poolEndRequests.push(msg.sender);
+     }
+    
+    function drawChits(uint _poolId) public payable {
+         
+      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can draw chits');
+      require(chitsPool[_poolId].isExists, 'Pool with this Id doesnot exist');
+      require(!chitsPool[_poolId].isEnded, 'This Pool is already Ended');
+      require(chitsPool[_poolId].amountAvailable == chitsPool[_poolId].poolAmount, 'All members have not deposited amounts yet.');
+      require(!poolMembers[msg.sender][_poolId].isDrawn, 'You have already drawn chits under this pool.');
+
+      chitsPool[_poolId].winnerOfMonth == msg.sender;
+      poolMembers[msg.sender][_poolId].isDrawn = true;
+      msg.sender.transfer(poolAmount);
+      chitsPool[_poolId].amountAvailable -= poolAmount;
      }
     
 }
