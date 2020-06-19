@@ -119,8 +119,6 @@ contract microchits {
       require(!chitsPool[_poolId].isEnded, 'This Pool is already Ended');
       require(chitsPool[_poolId].poolEndRequests.length == chitsPool[_poolId].poolSize, 'All Pool members request are needed to end pool.');
      
-      
-      poolMembers[msg.sender][_poolId].payments.push(now);
       chitsPool[_poolId].isEnded = true;
      }
     
