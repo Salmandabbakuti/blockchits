@@ -54,7 +54,7 @@ contract microchits {
       
          chitsPool[now].poolName = _poolName;
          chitsPool[now].poolId = now;
-          chitsPool[now].availableSlots = _poolSize;
+         chitsPool[now].availableSlots = _poolSize-1;
          chitsPool[now].startedOn = now;
          chitsPool[now].endingOn = now + _period;
          chitsPool[now].poolAmount = _poolAmount;
@@ -63,6 +63,8 @@ contract microchits {
          chitsPool[now].owner = msg.sender;
          chitsPool[now].isExists = true;
          chitsPool[now].aph = _poolAmount/_poolSize;
+         chitsPool[now].members.push(msg.sender); //owner can join pool by default
+         poolMembers[msg.sender][_poolId].isJoined =true;
          return now;
          
      }
@@ -105,6 +107,8 @@ contract microchits {
       require(poolMembers[msg.sender][_poolId].totalPaid < chitsPool[_poolId].poolAmount,'You have already paid all installments.');
       
       poolMembers[msg.sender][_poolId].payments.push(now);
+      poolMembers[msg.sender][_poolId].totalPaid += msg.value;
+      chitsPool[_poolId].amountAvailable += msg.value;
    
       
      }
