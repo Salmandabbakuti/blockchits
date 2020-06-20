@@ -53,6 +53,7 @@ contract blockchits {
       bool isDrawn;
       uint[] payments; //all payments timestamps
       uint totalPaid;
+      uint latestPayment;
   }
   mapping(uint => chitsData) private chitsPool;
   mapping(uint => poolStatus) public chitsPoolStatus;
@@ -129,11 +130,13 @@ contract blockchits {
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is Ended');
       require(chitsPool[_poolId].aph == msg.value,'Amount must be equal to pool amount per head');
+      require(poolMembers[msg.sender][_poolId].latestPayment+2592000 < now,'You have already paid this month payment');
       require(poolMembers[msg.sender][_poolId].totalPaid < chitsPool[_poolId].poolAmount,'You have already paid all installments.');
       
       poolMembers[msg.sender][_poolId].payments.push(now);
       poolMembers[msg.sender][_poolId].totalPaid += msg.value;
       chitsPool[_poolId].amountAvailable += msg.value;
+      poolMembers[msg.sender][_poolId].latestPayment = now;
    
       
      }
@@ -174,11 +177,11 @@ contract blockchits {
       chitsPool[_poolId].amountAvailable -= chitsPool[_poolId].poolAmount;
      }
      
-     function getPoolInfo(uint _poolId) public view returns(string memory, uint, uint, uint, address, uint, uint){
+     function getPoolInfo(uint _poolId) public view returns(string memory poolName, uint startedOn, uint period , uint poolAmount, address owner, uint poolSize, uint amountPerHead){
          return (
        chitsPool[_poolId].poolName,
        chitsPool[_poolId].startedOn,
-       chitsPool[_poolId].endingOn,
+       chitsPool[_poolId].period,
        chitsPool[_poolId].poolAmount,
        chitsPool[_poolId].owner,
        chitsPool[_poolId].poolSize,
@@ -189,7 +192,7 @@ contract blockchits {
       );
      }
      
-     function getPoolStatus(uint _poolId) public view returns(string memory, uint, address, bool, bool, uint, address [] memory){
+     function getPoolStatus(uint _poolId) public view returns(string memory poolName, uint amountAvailable, address winnerOfMonth, bool isExists, bool isEnded, uint latestDrawOn, address [] memory joinedMembers ){
          require(poolMembers[msg.sender][_poolId].isJoined, 'Only Joined members can view pool status');
          return (
        chitsPool[_poolId].poolName,
@@ -212,7 +215,7 @@ contract blockchits {
          
      }
      
-     function getPoolRequests(uint _poolId) public view returns(string memory, address [] memory, address [] memory){
+     function getPoolRequests(uint _poolId) public view returns(string memory poolName, address [] memory memberRequests, address [] memory poolEndRequests){
           require(chitsPool[_poolId].owner == msg.sender, 'Only pool owner can view pool requests.');
          return (
        chitsPool[_poolId].poolName,
@@ -221,7 +224,7 @@ contract blockchits {
       );
      }
      
-      function getPoolMemberInfo(uint _poolId, address _member) public view returns(string memory, uint [] memory, uint, bool, bool){
+      function getPoolMemberInfo(uint _poolId, address _member) public view returns(string memory poolName, uint [] memory payments, uint totalPaid, bool isDrawn, bool isRequestedEnd){
           require(chitsPool[_poolId].owner == msg.sender, 'Only pool owner can view pool member data');
           require(poolMembers[_member][_poolId].isJoined, 'Member is not part of this pool.');
          return (
@@ -233,7 +236,7 @@ contract blockchits {
       );
      }
      
-     function getMyPools() public view returns(uint [] memory, uint [] memory){
+     function getMyPools() public view returns(uint [] memory createdPools, uint [] memory joinedPools){
           require(members[msg.sender].isCreated , 'You are not registered on this platform yet.');
          return (
              members[msg.sender].createdPools,
