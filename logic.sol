@@ -42,6 +42,8 @@ contract blockchits {
       bool isCreated;
       string mobile;
       address addr; //ethereum account address
+      uint[] createdPools;
+      uint[] joinedPools;
   }
   struct poolMemberData {
       address addr;
@@ -68,7 +70,7 @@ contract blockchits {
          members[msg.sender].addr= msg.sender;
      }
   function createPool(string memory _poolName,uint _poolAmount,uint _period, uint _poolSize) public payable returns (uint){
-      require(!members[msg.sender].isCreated, 'You mustbe registered before creating pool');
+      require(members[msg.sender].isCreated, 'You mustbe registered before creating pool');
       
          chitsPool[now].poolName = _poolName;
          chitsPool[now].poolId = now;
@@ -82,9 +84,11 @@ contract blockchits {
          chitsPoolStatus[now].isExists = true;
          chitsPoolStatus[now].poolName = _poolName;
          chitsPoolStatus[now].poolId = now;
-         chitsPool[now].aph = _poolAmount/_poolSize;
+         chitsPool[now].aph = (_poolAmount/_poolSize)/_period;
          chitsPool[now].members.push(msg.sender); //owner can join pool by default
          poolMembers[msg.sender][now].isJoined = true;
+         members[msg.sender].createdPools.push(now);
+         members[msg.sender].joinedPools.push(now);
          return now;
          
      }
@@ -115,6 +119,7 @@ contract blockchits {
       chitsPool[_poolId].members.push(_member);
       poolMembers[_member][_poolId].isJoined = true;
       poolMembers[_member][_poolId].addr = _member;
+      members[_member].joinedPools.push(_poolId);
       chitsPool[_poolId].availableSlots--;
      }
      
@@ -225,6 +230,15 @@ contract blockchits {
        poolMembers[_member][_poolId].totalPaid,
        poolMembers[_member][_poolId].isDrawn,
        poolMembers[_member][_poolId].isRequestedEnd
+      );
+     }
+     
+     function getMyPools() public view returns(uint [] memory, uint [] memory){
+          require(members[msg.sender].isCreated , 'You are not registered on this platform yet.');
+         return (
+             members[msg.sender].createdPools,
+             members[msg.sender].joinedPools
+       
       );
      }
     
