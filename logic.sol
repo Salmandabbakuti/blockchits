@@ -243,6 +243,7 @@ contract blockchits {
      }
      
      function getMyPoolInfo(uint _poolId) public view returns(string memory poolName, uint [] memory payments, uint totalPaid, bool isDrawn, uint latestPayment, uint nextScheduledPayment){
+          require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnt exist');
           require(poolMembers[msg.sender][_poolId].isJoined, 'You are not part of this pool.');
          
          return (
