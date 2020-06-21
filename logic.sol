@@ -54,6 +54,7 @@ contract blockchits {
       uint[] payments; //all payments timestamps
       uint totalPaid;
       uint latestPayment;
+      uint nextScheduledPayment;
   }
   mapping(uint => chitsData) private chitsPool;
   mapping(uint => poolStatus) public chitsPoolStatus;
@@ -130,13 +131,14 @@ contract blockchits {
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is Ended');
       require(chitsPool[_poolId].aph == msg.value,'Amount must be equal to pool amount per head');
-      require(poolMembers[msg.sender][_poolId].latestPayment+2592000 < now,'You have already paid this month payment');
+      require(poolMembers[msg.sender][_poolId].nextScheduledPayment < now,'You have already paid this month payment');
       require(poolMembers[msg.sender][_poolId].totalPaid < chitsPool[_poolId].poolAmount,'You have already paid all installments.');
       
       poolMembers[msg.sender][_poolId].payments.push(now);
       poolMembers[msg.sender][_poolId].totalPaid += msg.value;
       chitsPool[_poolId].amountAvailable += msg.value;
       poolMembers[msg.sender][_poolId].latestPayment = now;
+      poolMembers[msg.sender][_poolId].nextScheduledPayment = now + 2592000;
    
       
      }
@@ -177,15 +179,16 @@ contract blockchits {
       chitsPool[_poolId].amountAvailable -= chitsPool[_poolId].poolAmount;
      }
      
-     function getPoolInfo(uint _poolId) public view returns(string memory poolName, uint startedOn, uint period , uint poolAmount, address owner, uint poolSize, uint amountPerHead){
+     function getPoolInfo(uint _poolId) public view returns(string memory poolName, uint period , uint poolAmount, address owner, uint poolSize, uint amountPerHead, uint availableSlots){
          return (
        chitsPool[_poolId].poolName,
-       chitsPool[_poolId].startedOn,
        chitsPool[_poolId].period,
        chitsPool[_poolId].poolAmount,
        chitsPool[_poolId].owner,
        chitsPool[_poolId].poolSize,
-       chitsPool[_poolId].aph
+       chitsPool[_poolId].aph,
+       chitsPool[_poolId].availableSlots
+       //chitsPool[_poolId].startedOn,
         //chitsPool[_poolId].poolId,
        //chitsPool[_poolId].amountAvailable,
        //chitsPool[_poolId].winnerOfMonth
@@ -224,7 +227,7 @@ contract blockchits {
       );
      }
      
-      function getPoolMemberInfo(uint _poolId, address _member) public view returns(string memory poolName, uint [] memory payments, uint totalPaid, bool isDrawn, bool isRequestedEnd){
+      function getPoolMemberInfo(uint _poolId, address _member) public view returns(string memory poolName, uint [] memory payments, uint totalPaid, bool isDrawn, uint latestPayment, uint nextScheduledPayment){
           require(chitsPool[_poolId].owner == msg.sender, 'Only pool owner can view pool member data');
           require(poolMembers[_member][_poolId].isJoined, 'Member is not part of this pool.');
          return (
@@ -232,7 +235,9 @@ contract blockchits {
        poolMembers[_member][_poolId].payments,
        poolMembers[_member][_poolId].totalPaid,
        poolMembers[_member][_poolId].isDrawn,
-       poolMembers[_member][_poolId].isRequestedEnd
+       poolMembers[_member][_poolId].latestPayment,
+       poolMembers[_member][_poolId].nextScheduledPayment
+       //poolMembers[_member][_poolId].isRequestedEnd
       );
      }
      
