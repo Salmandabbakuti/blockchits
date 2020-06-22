@@ -6,7 +6,7 @@ ethereum based chit funds application
 ###### 1. Pool Managers (Owners):
 
 1. Signup
-2. Create Pool
+2. Create Pool (Pool period will be same as pool size. i.e if pool has 12 members, pool period will be 12 months.)
 3. Invite Members to signup and join pool
 4. Approve Join Requests
 5. Monitor Member Activity of their monthly payments and inform them if payment delayed.

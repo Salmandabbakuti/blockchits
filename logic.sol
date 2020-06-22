@@ -71,8 +71,10 @@ contract blockchits {
          members[msg.sender].mobile= _mobile;
          members[msg.sender].addr= msg.sender;
      }
-  function createPool(string memory _poolName,uint _poolAmount,uint _period, uint _poolSize) public payable returns (uint){
+  function createPool(string memory _poolName,uint _poolAmount, uint _poolSize) public payable returns (uint){
       require(members[msg.sender].isCreated, 'You mustbe registered before creating pool');
+       
+         uint _period = _poolSize; // Currently period must be equal to poolsize to tackle less pool amount while making draw
       
          chitsPool[now].poolName = _poolName;
          chitsPool[now].poolId = now;
@@ -86,7 +88,7 @@ contract blockchits {
          chitsPoolStatus[now].isExists = true;
          chitsPoolStatus[now].poolName = _poolName;
          chitsPoolStatus[now].poolId = now;
-         chitsPool[now].aph = (_poolAmount/_poolSize)/_period;
+         chitsPool[now].aph = (_poolAmount/_poolSize);
          chitsPool[now].members.push(msg.sender); //owner can join pool by default
          poolMembers[msg.sender][now].isJoined = true;
          members[msg.sender].createdPools.push(now);
