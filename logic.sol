@@ -174,8 +174,8 @@ contract blockchits {
       require(chitsPool[_poolId].amountAvailable >= chitsPool[_poolId].poolAmount, 'All members have not deposited amounts yet.');
       require(!poolMembers[msg.sender][_poolId].isDrawn, 'You have already drawn chits under this pool.');
 
-      chitsPool[_poolId].winnerOfMonth == msg.sender;
-      chitsPool[_poolId].latestDrawOn == now;
+      chitsPool[_poolId].winnerOfMonth = msg.sender;
+      chitsPool[_poolId].latestDrawOn = now;
       poolMembers[msg.sender][_poolId].isDrawn = true; 
       msg.sender.transfer(chitsPool[_poolId].poolAmount);
       chitsPool[_poolId].amountAvailable -= chitsPool[_poolId].poolAmount;
