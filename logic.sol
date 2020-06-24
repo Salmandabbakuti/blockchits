@@ -72,7 +72,7 @@ contract blockchits {
          members[msg.sender].addr= msg.sender;
      }
   function createPool(string memory _poolName,uint _poolAmount, uint _poolSize) public payable returns (uint){
-      require(members[msg.sender].isCreated, 'You mustbe registered before creating pool');
+      require(members[msg.sender].isCreated, 'You must be registered before creating pool');
        
          uint _period = _poolSize; // Currently period must be equal to poolsize to tackle less pool amount while making draw
       
@@ -113,12 +113,12 @@ contract blockchits {
      function approveJoin(uint _poolId, address _member) public payable {
          
       require(members[_member].isCreated,'Joining member mustbe registred first before joining pool');
-      require(chitsPool[_poolId].owner==msg.sender,'You are not the owner of this pool');
-      require(poolMembers[_member][_poolId].isRequested,'Member must be requested before to join in this pool');
-       require(!poolMembers[_member][_poolId].isJoined,'Member already joined in this pool');
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
-      require(chitsPool[_poolId].availableSlots >=1, 'This Pool is filled up');
+      require(chitsPool[_poolId].owner==msg.sender,'You are not the owner of this pool');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is Ended');
+       require(chitsPool[_poolId].availableSlots >=1, 'This Pool is filled up');
+      require(poolMembers[_member][_poolId].isRequested,'Member must be requested before to join in this pool');
+      require(!poolMembers[_member][_poolId].isJoined,'Member already joined in this pool');
    
       chitsPool[_poolId].members.push(_member);
       poolMembers[_member][_poolId].isJoined = true;
@@ -128,13 +128,12 @@ contract blockchits {
      }
      
      function payAmount(uint _poolId) public payable {
-
-      require(poolMembers[msg.sender][_poolId].isJoined,'You are not joined in this pool');
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is Ended');
-      require(chitsPool[_poolId].aph == msg.value,'Amount must be equal to pool amount per head');
+      require(poolMembers[msg.sender][_poolId].isJoined,'You are not joined in this pool');
       require(poolMembers[msg.sender][_poolId].nextScheduledPayment < now,'You have already paid this month payment');
       require(poolMembers[msg.sender][_poolId].totalPaid < chitsPool[_poolId].poolAmount,'You have already paid all installments.');
+      require(chitsPool[_poolId].aph == msg.value,'Amount must be equal to pool amount per head');
       
       poolMembers[msg.sender][_poolId].payments.push(now);
       poolMembers[msg.sender][_poolId].totalPaid += msg.value;
@@ -146,9 +145,9 @@ contract blockchits {
      }
      
      function endPool(uint _poolId) public payable {
-         
-      require(chitsPool[_poolId].owner == msg.sender, 'Only owner can end pool');
+
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is already Ended');
+      require(chitsPool[_poolId].owner == msg.sender, 'Only owner can end pool');
       require(chitsPool[_poolId].poolEndRequests.length == chitsPool[_poolId].poolSize, 'All Pool members request are needed to end pool.');
      
       chitsPoolStatus[_poolId].isEnded = true;
@@ -156,10 +155,10 @@ contract blockchits {
     
      function submitPoolEndRequest(uint _poolId) public payable {
          
-      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can submit end request');
-      require(!poolMembers[msg.sender][_poolId].isRequestedEnd, 'You are already subitted pool end request. No need to resubmit.');
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is already Ended');
+      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can submit end request');
+      require(!poolMembers[msg.sender][_poolId].isRequestedEnd, 'You are already subitted pool end request. No need to resubmit.');
       
       chitsPool[_poolId].poolEndRequests.push(msg.sender);
       poolMembers[msg.sender][_poolId].isRequestedEnd = true;
@@ -168,12 +167,12 @@ contract blockchits {
     
     function drawChits(uint _poolId) public payable {
          
-      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can draw chits');
       require(chitsPoolStatus[_poolId].isExists, 'Pool with this Id doesnot exist');
       require(!chitsPoolStatus[_poolId].isEnded, 'This Pool is already Ended');
-      require(chitsPool[_poolId].amountAvailable >= chitsPool[_poolId].poolAmount, 'All members have not deposited amounts yet.');
+      require(poolMembers[msg.sender][_poolId].isJoined, 'Only pool members can draw chits');
       require(!poolMembers[msg.sender][_poolId].isDrawn, 'You have already drawn chits under this pool.');
-
+      require(chitsPool[_poolId].amountAvailable >= chitsPool[_poolId].poolAmount, 'All members have not deposited amounts yet.');
+     
       chitsPool[_poolId].winnerOfMonth = msg.sender;
       chitsPool[_poolId].latestDrawOn = now;
       poolMembers[msg.sender][_poolId].isDrawn = true; 
